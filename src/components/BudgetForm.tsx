@@ -1,27 +1,19 @@
 import { useState, useMemo } from "react";
 import { useBudget } from "../hooks/useBudget";
+import { NumericFormat } from "react-number-format";
 
 export default function BudgetForm() {
-    const [budget, setBudget] = useState<string>(""); // Ahora es un string
+    const [budget, setBudget] = useState<string>(""); // Estado del presupuesto como string
     const { dispatch } = useBudget();
-    const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        let value = e.target.value;
-        
-        // Elimina ceros iniciales, pero permite escribir solo "0"
-        if (/^0+\d/.test(value)) {
-            value = value.replace(/^0+/, "");
-        }
-        setBudget(value);
-    };
 
     const isValid = useMemo(() => {
-        const numericBudget = Number(budget);
+        const numericBudget = Number(budget.replace(/,/g, "")); // Elimina separadores antes de evaluar
         return isNaN(numericBudget) || numericBudget <= 0;
     }, [budget]);
 
     const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
-        dispatch({ type: 'add-budget', payload: { budget: Number(budget) } });
+        dispatch({ type: "add-budget", payload: { budget: Number(budget.replace(/,/g, "")) } });
     };
 
     return (
@@ -30,14 +22,19 @@ export default function BudgetForm() {
                 <label htmlFor="budget" className="text-4xl text-green-400 font-bold text-center">
                     Definir Presupuesto
                 </label>
-                <input 
+                <NumericFormat
                     id="budget"
-                    type="number"
                     className="w-full bg-white border border-gray-200 p-2"
-                    placeholder="Define tu Presupuesto" 
+                    placeholder="Define tu Presupuesto"
                     name="budget"
                     value={budget}
-                    onChange={handleChange}
+                    thousandSeparator={true} // Formateo con separadores de miles
+                    decimalScale={0} // Cero decimales
+                    fixedDecimalScale={true}
+                    allowNegative={false}
+                    onValueChange={(values) => {
+                        setBudget(values.formattedValue); // Guarda el valor formateado
+                    }}
                 />
             </div>
             <input 
@@ -48,4 +45,4 @@ export default function BudgetForm() {
             />
         </form>
     );
-};
+}
